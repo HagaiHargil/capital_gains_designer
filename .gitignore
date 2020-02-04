@@ -1,0 +1,8 @@
+*.spec
+.vscode/*
+.mypy_cache/*
+dist/*
+build/*
+venv/*
+_venv/*
+__pycache__/*

@@ -20,7 +20,7 @@ def apply_with_exchange_rate_profit_loss(file):
     # convert from USD to ILS
     Dollar_ILS_Rates = pd.read_excel('dollar values.xlsx', index_col=None)
     Last_known_Rate = Dollar_ILS_Rates['USD/ILS'].tail(1).values[0]
-    file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price', "Currency", "Proceeds", "Nominal_Cost_Basis",
+    file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price','marginal_percent', "Currency", "Proceeds", "Nominal_Cost_Basis",
                     "Gain"]
 
     # change caption of currency to ILS
@@ -59,7 +59,7 @@ def apply_none_exchange_rate_profit_loss(file):
     # convert from USD to ILS
     Dollar_ILS_Rates = pd.read_excel('dollar values.xlsx', index_col=None)
     Last_known_Rate = Dollar_ILS_Rates['USD/ILS'].tail(1).values[0]
-    file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price', "Currency", "Proceeds", "Nominal_Cost_Basis",
+    file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price','marginal_percent', "Currency", "Proceeds", "Nominal_Cost_Basis",
                     "Gain"]
 
     # change caption of currency to ILS

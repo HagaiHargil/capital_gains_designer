@@ -65,12 +65,14 @@ workbook.filename = where_to_save_the_macro
 workbook.add_vba_project('vbaProject.bin')
 writer.save()
 #Activate the macro on the xlsm file and save
+
 if os.path.exists(where_to_save_the_macro):
     xl = win32com.client.Dispatch('Excel.Application')
     xl.Workbooks.Open(Filename = where_to_save_the_macro, ReadOnly=0)
     xl.Application.Run("Macro1")
     xl.Application.Quit()
     del xl
+
 #close Macro file
 writer.close()
 #remove regular excel file

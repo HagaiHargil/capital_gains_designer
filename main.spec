@@ -1,14 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-import sys
-sys.setrecursionlimit(5000)
 
 block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['C:\\Users\\yuval\\PycharmProjects\\Capital Gains Page Designer'],
+             pathex=['/home/hagai/Code/capital_gains_designer'],
              binaries=[],
-             datas=[],
+             datas=[('dollar values.xlsx', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
