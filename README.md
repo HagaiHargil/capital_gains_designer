@@ -24,3 +24,8 @@ Groupby By "sell date" your BitcoinTaxes's "Capital Gains output" and run it thr
 
 Available to give any assistance.
 
+## Feb 2020 update
+
+Software was updated so that it will contain updated currency rates and that it would be possible to make an executable out of it. 
+The .exe can be generated using the auto-py-to-exe app, and the suitable config file is a .json file in this folder.
+

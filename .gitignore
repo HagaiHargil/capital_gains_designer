@@ -6,3 +6,7 @@ build/*
 venv/*
 _venv/*
 __pycache__/*
+output/
+*.pyo
+*.zip
+*.egg-info/
