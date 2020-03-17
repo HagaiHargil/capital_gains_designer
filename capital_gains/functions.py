@@ -5,6 +5,8 @@ from tkinter.filedialog import askopenfilename
 import tkinter as tk
 import os
 import pathlib
+import datetime
+import requests
 
 
 def divide_to_different_coins(pd1):
@@ -57,7 +59,6 @@ def apply_with_exchange_rate_profit_loss(file):
     return result2
 
 def apply_none_exchange_rate_profit_loss(file):
-    # convert from USD to ILS
     Dollar_ILS_Rates = pd.read_excel('../dollar values.xlsx', index_col=None)
     Last_known_Rate = Dollar_ILS_Rates['USD/ILS'].tail(1).values[0]
     file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price','marginal_percent', "Currency", "Proceeds", "Nominal_Cost_Basis",
@@ -101,9 +102,38 @@ def Convert_to_ILS_Figures(file : pd.DataFrame):
 
     return preferred,resulotion,ComparedProfit
 
+
+def _add_missing_rates(current_rates, num):
+    api_url = 'https://api.cbs.gov.il/index/data/price'
+    options = {'id':'120010', 'format': 'json', 'download': 'false', 'coef': 'true'}
+    options['last'] = num
+    rates = requests.get(api_url, options).json()
+    new_df_rows = []
+    for rate in rates['month'][0]['date']:
+        year = rate['year']
+        month = rate['month']
+        val = rate['prevBase'][-1]['value']
+        new_df_rows.append(pd.DataFrame({'YearMonth': year * 100 + month, 'Rate': val}, index=[0]))
+    new_df = pd.concat(reversed(new_df_rows), ignore_index=True)
+    current_rates = current_rates.append(new_df)
+    current_rates.to_excel('rates.xlsx', index=False)
+    return current_rates
+
+
+def get_updated_rates():
+    current_rates = pd.read_excel('rates.xlsx', index_col=None)
+    current_date = datetime.datetime.now()
+    last_rate_date = int(current_rates.iloc[-1, 0])
+    year, month = divmod(last_rate_date, 100)
+    last_as_date = datetime.datetime(year, month, 1)
+    num_missing = (current_date.year - last_as_date.year) * 12 + (current_date.month - last_as_date.month)
+    if num_missing > 1:
+        current_rates = _add_missing_rates(current_rates, num_missing - 1)
+    return current_rates
+
+
 def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
-    #Pandas object for Israeli rates thougout the years - until 11/2018
-    Israeli_Rates = pd.read_excel('.\\rates.xlsx',index_col=None)
+    Israeli_Rates = get_updated_rates()
     Last_known_Rate = Israeli_Rates['Rate'].tail(1).values[0]
 
     test_file = file

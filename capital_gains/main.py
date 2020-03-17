@@ -2,7 +2,7 @@
 import pandas as pd
 from functions import OpenFile,prepare_capital_gains_file_for_print,Inflation_Adjusted_Cost_Basis,Convert_to_ILS_Figures,divide_to_different_coins,set_bloxtaxfile,add_info_columns
 import os
-import win32com.client
+# import win32com.client
 
 #before compiling to a file - remember adding these lines to the spec file - after first attemp :
 import sys
@@ -67,12 +67,12 @@ workbook.add_vba_project('vbaProject.bin')
 writer.save()
 #Activate the macro on the xlsm file and save
 
-if os.path.exists(where_to_save_the_macro):
-    xl = win32com.client.Dispatch('Excel.Application')
-    xl.Workbooks.Open(Filename = where_to_save_the_macro, ReadOnly=0)
-    xl.Application.Run("Macro1")
-    xl.Application.Quit()
-    del xl
+# if os.path.exists(where_to_save_the_macro):
+#     xl = win32com.client.Dispatch('Excel.Application')
+#     xl.Workbooks.Open(Filename = where_to_save_the_macro, ReadOnly=0)
+#     xl.Application.Run("Macro1")
+#     xl.Application.Quit()
+#     del xl
 
 #close Macro file
 writer.close()
