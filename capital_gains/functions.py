@@ -7,6 +7,24 @@ import os
 import pathlib
 import datetime
 import requests
+import shutil
+
+
+def download_file(url):
+    local_filename = url.split('/')[-1]
+    with requests.get(url, stream=True) as r:
+        with open(local_filename, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+
+    return local_filename
+
+
+def dollar_values():
+    url = 'https://www.boi.org.il/he/Markets/Documents/yazigmizt.xlsx'
+    fname = download_file(url)
+    data = pd.read_excel(fname, index_col=None)
+    data = data[["DATE", "US DOLLAR"]].rename({"DATE": "Date", "US DOLLAR": "USD/ILS"})
+    return data
 
 
 def divide_to_different_coins(pd1):
@@ -21,7 +39,7 @@ def divide_to_different_coins(pd1):
 
 def apply_with_exchange_rate_profit_loss(file):
     # convert from USD to ILS
-    Dollar_ILS_Rates = pd.read_excel('../dollar values.xlsx', index_col=None)
+    Dollar_ILS_Rates = dollar_values()
     Last_known_Rate = Dollar_ILS_Rates['USD/ILS'].tail(1).values[0]
     file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price','marginal_percent', "Currency", "Proceeds", "Nominal_Cost_Basis",
                     "Gain"]
@@ -58,8 +76,9 @@ def apply_with_exchange_rate_profit_loss(file):
     result2['Gain'] = result2['Proceeds'] - result2['Nominal_Cost_Basis']
     return result2
 
+
 def apply_none_exchange_rate_profit_loss(file):
-    Dollar_ILS_Rates = pd.read_excel('../dollar values.xlsx', index_col=None)
+    Dollar_ILS_Rates = dollar_values()
     Last_known_Rate = Dollar_ILS_Rates['USD/ILS'].tail(1).values[0]
     file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price','marginal_percent', "Currency", "Proceeds", "Nominal_Cost_Basis",
                     "Gain"]
