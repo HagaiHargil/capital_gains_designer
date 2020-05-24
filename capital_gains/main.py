@@ -3,6 +3,7 @@ import pandas as pd
 from functions import OpenFile,prepare_capital_gains_file_for_print,Inflation_Adjusted_Cost_Basis,Convert_to_ILS_Figures,divide_to_different_coins,set_bloxtaxfile,add_info_columns
 import os
 import win32com.client
+import numpy as np
 
 #before compiling to a file - remember adding these lines to the spec file - after first attemp :
 import sys
@@ -18,7 +19,7 @@ ComparedProfit = 0
 path = OpenFile()
 print(path)
 #terminate window midway:
-if path is '':
+if path == '':
     print('Terminated')
     exit()
 #check columns in order to classify origin:
@@ -64,6 +65,8 @@ where_to_save_the_macro = where_to_save[:-1] + str('m')
 workbook = writer.book
 workbook.filename = where_to_save_the_macro
 workbook.add_vba_project('vbaProject.bin')
+sheet = workbook.get_worksheet_by_name("Sheet1")
+sheet.write_column(0, 12, list(range(len(df3))))
 writer.save()
 #Activate the macro on the xlsm file and save
 
@@ -74,6 +77,7 @@ if os.path.exists(where_to_save_the_macro):
     xl.Application.Quit()
     del xl
 
+
 #close Macro file
 writer.close()
 #remove regular excel file
@@ -82,5 +86,13 @@ try:
    os.remove(where_to_save)
 except:
     pass
+
+# Add numbers to first column in generated file
+# table = pd.read_excel(where_to_save_the_macro)
+# numbers_col = table["Unnamed: 0"]
+# correct_numbering = np.arange(500)
+# first_num = np.argwhere((numbers_col == 1).to_numpy())[0][0]
+# needed = len(numbers_col) - first_num
+# numbers_col.iloc[first_num:] = correct_numbering[:needed]
 
 
