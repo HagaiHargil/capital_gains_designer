@@ -59,8 +59,9 @@ df3 = Inflation_Adjusted_Cost_Basis(df2) #all capital gains are presented in a s
 #save to regular excel file
 where_to_save = path[:-4] + " edited.xlsx"
 writer = pd.ExcelWriter(where_to_save, engine='xlsxwriter')
+
 df3.index.names = ['עסקה']
-df3.to_excel(writer, index=True, encoding='UTF-8')
+df3.to_excel(writer, index=False, encoding='UTF-8')
 #Save macro on a macro enabled excel file (xlsm)
 where_to_save_the_macro = where_to_save[:-1] + str('m')
 workbook = writer.book
@@ -70,6 +71,8 @@ sheet = workbook.get_worksheet_by_name("Sheet1")
 sheet.write_column(0, 12, list(range(len(df3))))
 writer.save()
 #Activate the macro on the xlsm file and save
+
+df3.to_excel('raw_data.xlsx')
 
 if os.path.exists(where_to_save_the_macro):
     xl = win32com.client.Dispatch('Excel.Application')
