@@ -211,12 +211,12 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
         results2['Date Sold'] = results2['Date Sold'].dt.date
     except:
         pass
-
+    year = results2["Date Sold"].year
     #give hebrew titles
     results2.columns = ["מטבע","כמות","תאריך רכישה","תאריך מכירה","מחיר קניה","מחיר מכירה","רווח-הפסד שולי באחוזים","מדד רכישה (לפי בסיס 51)",
                         "מדד מכירה (לפי בסיס 51)","תמורה בשקלים-שוי עסקת ברטר","עלות מקורית נומינאלית","סכום אינפלציוני","עלות מקורית מתואמת","רווח/הפסד נומינאלי","רווח-הפסד ריאלי","רווח-הפסד לצורכי מס"]
 
-    return results2
+    return results2, year
 
 def add_info_columns(df):
 
