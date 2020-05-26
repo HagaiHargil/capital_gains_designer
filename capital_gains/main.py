@@ -36,7 +36,7 @@ isbitcointax = all(elem in titles for elem in BitcoinTaxFile_title_identifiers)
 
 capital_gains = pd.DataFrame
 if isbitcointax:
-    capital_gains = pd.read_csv(path, index_col=None, usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+    capital_gains = pd.read_csv(path, index_col=None)
 elif isbloxtax:
     capital_gains = set_bloxtaxfile(path)
 else:

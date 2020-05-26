@@ -23,7 +23,7 @@ def dollar_values():
     url = 'https://www.boi.org.il/he/Markets/Documents/yazigmizt.xlsx'
     fname = download_file(url)
     data = pd.read_excel(fname, index_col=None)
-    data = data[["DATE", "US DOLLAR"]].rename({"DATE": "Date", "US DOLLAR": "USD/ILS"})
+    data = data[["DATE", "US DOLLAR"]].rename({"DATE": "Date", "US DOLLAR": "USD/ILS"}, axis=1)
     return data
 
 
@@ -41,8 +41,8 @@ def apply_with_exchange_rate_profit_loss(file):
     # convert from USD to ILS
     Dollar_ILS_Rates = dollar_values()
     Last_known_Rate = Dollar_ILS_Rates['USD/ILS'].tail(1).values[0]
-    file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price','marginal_percent', "Currency", "Proceeds", "Nominal_Cost_Basis",
-                    "Gain"]
+    new_columns = ["Symbol","Volume","Date Acquired","Date Sold",'Buy Price','Sell Price','marginal_percent',"Currency","Proceeds","Nominal_Cost_Basis","Gain", 'AcquiredAccount','SoldAccount']
+    file.columns = new_columns[:len(file.columns)]
 
     # change caption of currency to ILS
     file['Currency'] = 'ILS'
@@ -80,8 +80,8 @@ def apply_with_exchange_rate_profit_loss(file):
 def apply_none_exchange_rate_profit_loss(file):
     Dollar_ILS_Rates = dollar_values()
     Last_known_Rate = Dollar_ILS_Rates['USD/ILS'].tail(1).values[0]
-    file.columns = ["Symbol", "Volume", "Date Acquired", "Date Sold",'Buy Price','Sell Price','marginal_percent', "Currency", "Proceeds", "Nominal_Cost_Basis",
-                    "Gain"]
+    new_columns = ["Symbol","Volume","Date Acquired","Date Sold",'Buy Price','Sell Price','marginal_percent',"Currency","Proceeds","Nominal_Cost_Basis","Gain", 'AcquiredAccount','SoldAccount']
+    file.columns = new_columns[:len(file.columns)]
 
     # change caption of currency to ILS
     file['Currency'] = 'ILS'
@@ -156,7 +156,8 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
     Last_known_Rate = Israeli_Rates['Rate'].tail(1).values[0]
 
     test_file = file
-    test_file.columns = ["Symbol","Volume","Date Acquired","Date Sold",'Buy Price','Sell Price','marginal_percent',"Currency","Proceeds","Nominal_Cost_Basis","Gain"]
+    new_columns = ["Symbol","Volume","Date Acquired","Date Sold",'Buy Price','Sell Price','marginal_percent',"Currency","Proceeds","Nominal_Cost_Basis","Gain", 'AcquiredAccount','SoldAccount']
+    test_file.columns = new_columns[:len(file.columns)]
 
     #add Purchased YearMonth value to the list
     test_file['YearMonth'] = test_file['Date Acquired'].map(lambda x: 100*x.year + x.month)
@@ -202,8 +203,8 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
 
     #results2['Gain'] = results['Proceeds'] - results2['Inflation_Adjusted_Cost_Basis']
     cols = ['Symbol'] + ['Volume'] + ['Date Acquired'] + ['Date Sold'] + ['Buy Price'] + ['Sell Price'] + ['Purchasing_rate'] + ['Sale_rate'] +\
-           ['Proceeds'] + ['Nominal_Cost_Basis'] + ['Periodical_Inflation'] + ['Inflation_Adjusted_Cost_Basis'] +['nominal_gain'] + ['adjusted_gain'] + ['Gain']
-    results2 = results2[cols]
+           ['Proceeds'] + ['Nominal_Cost_Basis'] + ['Periodical_Inflation'] + ['Inflation_Adjusted_Cost_Basis'] +['nominal_gain'] + ['adjusted_gain'] + ['Gain'] + ['AcquiredAccount'] + ['SoldAccount']
+    results2 = results2[cols[:len(results2.columns)]]
 
     #fix date variable to look better
     try:
@@ -213,8 +214,10 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
         pass
 
     #give hebrew titles
-    results2.columns = ["מטבע","כמות","תאריך רכישה","תאריך מכירה","מחיר קניה","מחיר מכירה","מדד רכישה (לפי בסיס 51)",
+    hebrew_cols = ["מטבע","כמות","תאריך רכישה","תאריך מכירה","מחיר קניה","מחיר מכירה","מדד רכישה (לפי בסיס 51)",
                         "מדד מכירה (לפי בסיס 51)",'תמורה בש"ח-שווי עסקת ברטר',"עלות מקורית נומינאלית","סכום אינפלציוני","עלות מקורית מתואמת","רווח/הפסד נומינאלי","רווח-הפסד ריאלי","רווח-הפסד לצורכי מס"]
+    hebrew_cols += ['בורסת קניה', 'בורסת מכירה']
+    results2 = results2.rename({cur: heb for cur, heb in zip(results2.columns, hebrew_cols)}, axis=1)
 
     return results2
 
@@ -235,15 +238,22 @@ def prepare_capital_gains_file_for_print(df1):
         df1.drop(['Unmatched'],axis =1 ,inplace = True)
 
     #groupby rows by condition
-    x = df1.groupby(['Date Sold','Date Acquired','Symbol','Currency'], as_index=False).sum()
+    groupby_cols = ['AcquiredAccount', 'SoldAccount', 'Date Sold','Date Acquired','Symbol','Currency']
+    try:
+        x = df1.groupby(groupby_cols, as_index=False).sum()
+    except KeyError:
+        x = df1.groupby(groupby_cols[2:], as_index=False).sum()
     x['Buy Price'] = x['Cost Basis'] / x['Volume']
     x['Sell Price'] = x['Proceeds'] / x['Volume']
     x['marginal_percent'] =  round(((x['Sell Price'] / x['Buy Price']) -1),3)
 
-    cols = ['Symbol','Volume','Date Acquired','Date Sold','Buy Price','Sell Price','marginal_percent','Currency','Proceeds','Cost Basis','Gain']
-    x = x[cols]
+    cols = ['Symbol','Volume','Date Acquired','Date Sold','Buy Price','Sell Price','marginal_percent','Currency','Proceeds','Cost Basis','Gain', 'AcquiredAccount', 'SoldAccount']
+    x = x[cols[:len(x.columns)]]
+    hebrew_cols = ["מטבע","כמות","תאריך רכישה","תאריך מכירה","מחיר קניה","מחיר מכירה","רווח-הפסד שולי באחוזים","מטבע הצגה","תמורה","עלות מקורית","רווח-הפסד"]
+    hebrew_cols += ['בורסת קניה', 'בורסת מכירה']
     x = x.sort_values(by=['Symbol','Date Sold'],ascending=True)
-    x.columns =["מטבע","כמות","תאריך רכישה","תאריך מכירה","מחיר קניה","מחיר מכירה","רווח-הפסד שולי באחוזים","מטבע הצגה","תמורה","עלות מקורית","רווח-הפסד"]
+    renaming_with = {old: new for old, new in zip(cols, hebrew_cols)}
+    x = x.rename(renaming_with, axis=1)
 
     return x
 
