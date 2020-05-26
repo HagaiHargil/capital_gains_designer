@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 import pandas as pd
-from functions import OpenFile,prepare_capital_gains_file_for_print,Inflation_Adjusted_Cost_Basis,Convert_to_ILS_Figures,divide_to_different_coins,set_bloxtaxfile,add_info_columns
+from functions import OpenFile,prepare_capital_gains_file_for_print,Inflation_Adjusted_Cost_Basis,Convert_to_ILS_Figures,divide_to_different_coins,set_bloxtaxfile,add_info_columns,create_header, create_top_table, create_main_table
 import os
 import win32com.client
 import numpy as np
@@ -56,50 +56,18 @@ else:
     df2 = df1
 #adjust for inflation:
 df3 = Inflation_Adjusted_Cost_Basis(df2) #all capital gains are presented in a singel excel sheet and adjusted to inflation.
-#save to regular excel file
-where_to_save = path[:-4] + " edited.xlsx"
-writer = pd.ExcelWriter(where_to_save, engine='xlsxwriter')
-
 df3.index.names = ['עסקה']
-df3.to_excel(writer, index=False, encoding='UTF-8')
-#Save macro on a macro enabled excel file (xlsm)
-where_to_save_the_macro = where_to_save[:-1] + str('m')
+#save to regular excel file
+where_to_save = path[:-4] + "_edited.xlsx"
+writer = pd.ExcelWriter(where_to_save, engine='xlsxwriter', mode='w')
 workbook = writer.book
-workbook.filename = where_to_save_the_macro
-workbook.add_vba_project('vbaProject.bin')
+sheet = workbook.add_worksheet()
 sheet = workbook.get_worksheet_by_name("Sheet1")
-sheet.write_column(0, 12, list(range(len(df3))))
+writer.sheets["Sheet1"] = sheet
+create_header(sheet, year=df3.loc[0, "תאריך מכירה"].year, length=len(df3) + 13)
+create_top_table(df3, writer)
+create_main_table(df3, writer)
 writer.save()
-#Activate the macro on the xlsm file and save
-
-df3.to_excel('raw_data.xlsx')
-
-if os.path.exists(where_to_save_the_macro):
-    xl = win32com.client.Dispatch('Excel.Application')
-    xl.Workbooks.Open(Filename = where_to_save_the_macro, ReadOnly=0)
-    xl.Application.Run("Macro1")
-    xl.Application.Quit()
-    del xl
-
-
-s = workbook.get_worksheet_by_name('Sheet1')
-s.write_column('A13', list(range(len(df3))))
-writer.save()
-#close Macro file
 writer.close()
-#remove regular excel file
-workbook.close()
-try:
-   os.remove(where_to_save)
-except:
-    pass
 
-# Add numbers to first column in generated file
-# table = pd.read_excel(where_to_save_the_macro)
-# numbers_col = table["Unnamed: 0"]
-# correct_numbering = np.arange(500)
-# first_num = np.argwhere((numbers_col == 1).to_numpy())[0][0]
-# needed = len(numbers_col) - first_num
-# numbers_col.iloc[first_num:] = correct_numbering[:needed]
-
-
+# 

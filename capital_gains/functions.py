@@ -201,7 +201,7 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
     results2.loc[(results2.adjusted_gain < 0) & (results2.nominal_gain > 0) , 'Gain'] = 0
 
     #results2['Gain'] = results['Proceeds'] - results2['Inflation_Adjusted_Cost_Basis']
-    cols = ['Symbol'] + ['Volume'] + ['Date Acquired'] + ['Date Sold'] + ['Buy Price'] + ['Sell Price'] + ['marginal_percent'] + ['Purchasing_rate'] + ['Sale_rate'] +\
+    cols = ['Symbol'] + ['Volume'] + ['Date Acquired'] + ['Date Sold'] + ['Buy Price'] + ['Sell Price'] + ['Purchasing_rate'] + ['Sale_rate'] +\
            ['Proceeds'] + ['Nominal_Cost_Basis'] + ['Periodical_Inflation'] + ['Inflation_Adjusted_Cost_Basis'] +['nominal_gain'] + ['adjusted_gain'] + ['Gain']
     results2 = results2[cols]
 
@@ -213,8 +213,8 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
         pass
 
     #give hebrew titles
-    results2.columns = ["מטבע","כמות","תאריך רכישה","תאריך מכירה","מחיר קניה","מחיר מכירה","רווח-הפסד שולי באחוזים","מדד רכישה (לפי בסיס 51)",
-                        "מדד מכירה (לפי בסיס 51)","תמורה בשקלים-שוי עסקת ברטר","עלות מקורית נומינאלית","סכום אינפלציוני","עלות מקורית מתואמת","רווח/הפסד נומינאלי","רווח-הפסד ריאלי","רווח-הפסד לצורכי מס"]
+    results2.columns = ["מטבע","כמות","תאריך רכישה","תאריך מכירה","מחיר קניה","מחיר מכירה","מדד רכישה (לפי בסיס 51)",
+                        "מדד מכירה (לפי בסיס 51)",'תמורה בש"ח-שווי עסקת ברטר',"עלות מקורית נומינאלית","סכום אינפלציוני","עלות מקורית מתואמת","רווח/הפסד נומינאלי","רווח-הפסד ריאלי","רווח-הפסד לצורכי מס"]
 
     return results2
 
@@ -239,7 +239,6 @@ def prepare_capital_gains_file_for_print(df1):
     x['Buy Price'] = x['Cost Basis'] / x['Volume']
     x['Sell Price'] = x['Proceeds'] / x['Volume']
     x['marginal_percent'] =  round(((x['Sell Price'] / x['Buy Price']) -1),3)
-    print(x)
 
     cols = ['Symbol','Volume','Date Acquired','Date Sold','Buy Price','Sell Price','marginal_percent','Currency','Proceeds','Cost Basis','Gain']
     x = x[cols]
@@ -249,7 +248,7 @@ def prepare_capital_gains_file_for_print(df1):
     return x
 
 def OpenFile():
-    desktop_location = os.path.expanduser("~\Desktop")
+    desktop_location = os.path.expanduser(__file__)
     root = tk.Tk()
     root.withdraw()
     name = askopenfilename(initialdir=desktop_location,filetypes =(("Trade Files", "*.csv *.xls *.xlsx"),("All Files","*.*")),title = "Choose a file")
@@ -279,3 +278,44 @@ def set_bloxtaxfile(path):
 
 
     return file
+
+
+def create_header(sheet, year=2020, length=10):
+    """Creates the header for the given excel worksheet"""
+    sheet.right_to_left()
+    sheet.set_header(f'&L&D&Cנספח לטופס רווח הון בגין מכירת מטבעות וירטואליים, שנת {year}&Rשם')
+    sheet.set_page_view()
+    sheet.set_column(3, 4, 13)
+    sheet.print_area(f'A1:Q{length}')
+    sheet.set_landscape()
+    sheet.set_paper(3)
+    sheet.fit_to_pages(1, 1)
+    sheet.set_print_scale(40)
+    sheet.merge_range('A2:D2', 'a')
+    sheet.merge_range('F2:G2', 'b')
+    sheet.merge_range('F3:G3', '')
+    sheet.merge_range('F4:G4', '')
+    sheet.merge_range('F5:G5', '')
+    sheet.merge_range('F6:G6', '')
+    sheet.merge_range('F7:G7', '')
+    sheet.set_margins(right=0.05, top=0.4)
+
+
+def create_top_table(df, writer):
+    """Creates the smaller table above the main one"""
+    top_df_index = ['תמורה כוללת בש"ח/שווי עסקאות ברטר',
+    'עלות מחיר מקור', 'רווח/הפסד לצורכי מס', 'הוצאות הקשורות במכירה שלא הופחתו מן התמורה', 'רווח\הפסד לייחוס']
+    top_df_field_column = ['15', '20', '', '55', 'א21']
+    tmura_kolelet = df['תמורה בש"ח-שווי עסקת ברטר'].sum()
+    revah = df["רווח-הפסד לצורכי מס"].sum()
+    alut_mekori = tmura_kolelet - revah
+    ihus = revah
+    top_df_sums = [tmura_kolelet, alut_mekori, revah, 0, ihus]
+    top_df_column_names = ['ריכוז סעיפים בש"ח / שווי עסקאות ברטר', '1', '2', '3', "שדה", "סכום"]
+    data = (top_df_index, '', '', '', top_df_field_column, top_df_sums)
+    top_df = pd.DataFrame({name: data_item for name, data_item in zip(top_df_column_names, data)})
+    top_df.to_excel(writer, index=False, startrow=1, sheet_name="Sheet1")
+
+def create_main_table(df, writer):
+    """Creates the larger table on the excel sheet"""
+    df.to_excel(writer, index=True, startrow=12, startcol=0, sheet_name="Sheet1")
