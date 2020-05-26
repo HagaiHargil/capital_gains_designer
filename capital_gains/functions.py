@@ -204,7 +204,10 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
     #results2['Gain'] = results['Proceeds'] - results2['Inflation_Adjusted_Cost_Basis']
     cols = ['Symbol'] + ['Volume'] + ['Date Acquired'] + ['Date Sold'] + ['Buy Price'] + ['Sell Price'] + ['Purchasing_rate'] + ['Sale_rate'] +\
            ['Proceeds'] + ['Nominal_Cost_Basis'] + ['Periodical_Inflation'] + ['Inflation_Adjusted_Cost_Basis'] +['nominal_gain'] + ['adjusted_gain'] + ['Gain'] + ['AcquiredAccount'] + ['SoldAccount']
-    results2 = results2[cols[:len(results2.columns)]]
+    if "SoldAccount" in results2.columns:
+        results2 = results2[cols]
+    else:
+        results2 = results2[cols[:-2]]
 
     #fix date variable to look better
     try:
