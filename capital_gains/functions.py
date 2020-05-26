@@ -316,6 +316,14 @@ def create_top_table(df, writer):
     top_df = pd.DataFrame({name: data_item for name, data_item in zip(top_df_column_names, data)})
     top_df.to_excel(writer, index=False, startrow=1, sheet_name="Sheet1")
 
-def create_main_table(df, writer):
+def create_main_table(df, writer, sheet):
     """Creates the larger table on the excel sheet"""
-    df.to_excel(writer, index=True, startrow=12, startcol=0, sheet_name="Sheet1")
+    df.to_excel(writer, index=True, startrow=13, startcol=0, header=False, sheet_name="Sheet1")
+    header_format = writer.book.add_format({
+    'bold': True,
+    'text_wrap': True,
+    'valign': 'top',
+    'border': 1})
+    sheet.write(12, 0, df.index.names[0], header_format)
+    for col_num, value in enumerate(df.columns.values):
+        sheet.write(12, col_num + 1, value, header_format)

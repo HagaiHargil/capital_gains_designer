@@ -66,8 +66,6 @@ sheet = workbook.get_worksheet_by_name("Sheet1")
 writer.sheets["Sheet1"] = sheet
 create_header(sheet, year=df3.loc[0, "תאריך מכירה"].year, length=len(df3) + 13)
 create_top_table(df3, writer)
-create_main_table(df3, writer)
+create_main_table(df3, writer, sheet)
 writer.save()
 writer.close()
-
-# 
