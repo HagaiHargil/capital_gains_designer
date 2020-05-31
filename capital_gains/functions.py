@@ -293,17 +293,22 @@ def set_bloxtaxfile(path):
     return file
 
 
-def create_header(sheet, year=2020, length=10):
+def create_header_footer(sheet, year=2020, length=10):
     """Creates the header for the given excel worksheet"""
     sheet.right_to_left()
-    sheet.set_header(f'&L&D&Cנספח לטופס רווח הון בגין מכירת מטבעות וירטואליים, שנת {year}&Rשם')
+    david = '&"David,Bold"'
+    sheet.set_header("&L&14" + david + "&D&R&14" + david + "שם" + "&C&14" + david + f"נספח לטופס רווח הון בגין מכירת מטבעות וירטואליים, שנת {year}",
+        {'margin': 0.05},
+        )
+    sheet.set_footer("&C&8" + david + "&P" + "&R&8" + david + "רווחים אלה חושבו לפי שיטת",
+    {'margin': 0.05})
     sheet.set_page_view()
     sheet.set_column(3, 4, 13)
     sheet.print_area(f'A1:Q{length}')
     sheet.set_landscape()
-    sheet.set_paper(3)
+    sheet.set_paper(6)
     sheet.fit_to_pages(1, 1)
-    sheet.set_print_scale(40)
+    sheet.set_print_scale(60)
     sheet.merge_range('A2:D2', 'a')
     sheet.merge_range('F2:G2', 'b')
     sheet.merge_range('F3:G3', '')
@@ -311,14 +316,14 @@ def create_header(sheet, year=2020, length=10):
     sheet.merge_range('F5:G5', '')
     sheet.merge_range('F6:G6', '')
     sheet.merge_range('F7:G7', '')
-    sheet.set_margins(right=0.05, top=0.4)
+    sheet.set_margins(right=0.05, top=0.5, left=0.05, bottom=0.5)
 
 
-def create_top_table(df, writer):
+def create_top_table(df, writer, sheet):
     """Creates the smaller table above the main one"""
     top_df_index = ['תמורה כוללת בש"ח/שווי עסקאות ברטר',
     'עלות מחיר מקור', 'רווח/הפסד לצורכי מס', 'הוצאות הקשורות במכירה שלא הופחתו מן התמורה', 'רווח\הפסד לייחוס']
-    top_df_field_column = ['15', '20', '', '55', 'א21']
+    top_df_field_column = ['15', '20', '', '55', '21א']
     tmura_kolelet = df['תמורה בש"ח-שווי עסקת ברטר'].sum()
     revah = df["רווח-הפסד לצורכי מס"].sum()
     alut_mekori = tmura_kolelet - revah
@@ -327,16 +332,44 @@ def create_top_table(df, writer):
     top_df_column_names = ['ריכוז סעיפים בש"ח / שווי עסקאות ברטר', '1', '2', '3', "שדה", "סכום"]
     data = (top_df_index, '', '', '', top_df_field_column, top_df_sums)
     top_df = pd.DataFrame({name: data_item for name, data_item in zip(top_df_column_names, data)})
-    top_df.to_excel(writer, index=False, startrow=1, sheet_name="Sheet1")
+    header_format = writer.book.add_format({
+        'bold': True,
+        'text_wrap': True,
+        'valign': 'top',
+        'border': 1,
+        'font': 'David',
+        'font_size': 12})
+    top_df.to_excel(writer, index=False, startrow=2, sheet_name="Sheet1", header=False)
+    relevant_columns = [0, 4, 5]
+    _add_borders_to_intermediate_cells(sheet, header_format)
+    for col_num in relevant_columns:
+        sheet.write(1, col_num, top_df.columns[col_num], header_format)
+    form1 = writer.book.add_format({'num_format': "_ * #,##0.0_ ;_ * -#,##0.0_ ;_ * ""-""??_ ;_ @_ "})
+    sheet.set_column(9, 15, 15, form1)
+    form2 = writer.book.add_format({'num_format': "_ * #,##0_ ;_ * -#,##0_ ;_ * ""-""??_ ;_ @_ "})
+    sheet.set_column(7, 8, 15, form2)
+
+
+def _add_borders_to_intermediate_cells(sheet, header_format):
+    sheet.write(1, 6, None, header_format)
+    sheet.write(1, 3, None, header_format)
+    sheet.write(1, 2, None, header_format)
+    sheet.write(1, 1, None, header_format)
+
 
 def create_main_table(df, writer, sheet):
     """Creates the larger table on the excel sheet"""
+    df = df.copy()
+    df.index = range(1, len(df) + 1)
+    df.index.names = ["עסקה"]
     df.to_excel(writer, index=True, startrow=13, startcol=0, header=False, sheet_name="Sheet1")
     header_format = writer.book.add_format({
     'bold': True,
     'text_wrap': True,
     'valign': 'top',
-    'border': 1})
+    'border': 1,
+    'font': 'David',
+    'font_size': 12})
     sheet.write(12, 0, df.index.names[0], header_format)
     for col_num, value in enumerate(df.columns.values):
         sheet.write(12, col_num + 1, value, header_format)

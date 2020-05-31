@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 import pandas as pd
-from functions import OpenFile,prepare_capital_gains_file_for_print,Inflation_Adjusted_Cost_Basis,Convert_to_ILS_Figures,divide_to_different_coins,set_bloxtaxfile,add_info_columns,create_header, create_top_table, create_main_table
+from functions import OpenFile,prepare_capital_gains_file_for_print,Inflation_Adjusted_Cost_Basis,Convert_to_ILS_Figures,divide_to_different_coins,set_bloxtaxfile,add_info_columns,create_header_footer, create_top_table, create_main_table
 import os
 import win32com.client
 import numpy as np
@@ -43,6 +43,8 @@ else:
     print('Sorry, your file didnt match any known file we can use')
     exit()
 #groupby the page and add info?
+relevant_columns = capital_gains.columns.str.find("Unnamed").to_numpy().nonzero()[0]
+capital_gains = capital_gains.iloc[:, relevant_columns]
 df1 = prepare_capital_gains_file_for_print(capital_gains)
 
 #if necessary, convert USD to ILS
@@ -64,8 +66,8 @@ workbook = writer.book
 sheet = workbook.add_worksheet()
 sheet = workbook.get_worksheet_by_name("Sheet1")
 writer.sheets["Sheet1"] = sheet
-create_header(sheet, year=df3.loc[0, "תאריך מכירה"].year, length=len(df3) + 13)
-create_top_table(df3, writer)
+create_header_footer(sheet, year=df3.loc[0, "תאריך מכירה"].year, length=len(df3) + 13)
+create_top_table(df3, writer, sheet)
 create_main_table(df3, writer, sheet)
 writer.save()
 writer.close()
