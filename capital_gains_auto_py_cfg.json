@@ -68,6 +68,14 @@
   {
    "optionDest": "hiddenimports",
    "value": "pkg_resources.py2_warn"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "jinja2"
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/Users/Ronit/capital_gains_designer/capital_gains/templates/html.tpl;."
   }
  ],
  "nonPyinstallerOptions": {

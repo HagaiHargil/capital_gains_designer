@@ -1,5 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 import pandas as pd
+from jinja2 import Environment, ChoiceLoader, FileSystemLoader
+from IPython.display import HTML
+from pandas.io.formats.style import Styler
+
 import dateutil
 from tkinter.filedialog import askopenfilename
 import tkinter as tk
@@ -8,6 +12,18 @@ import pathlib
 import datetime
 import requests
 import shutil
+
+
+
+# class MyStyler(Styler):
+#     cur_folder = pathlib.Path(__file__).resolve().parent
+#     print(f"{cur_folder=}")
+#     env = Environment(
+#         loader=ChoiceLoader([
+#             FileSystemLoader(str(cur_folder / "templates")),
+#         ])
+#     )
+#     template = env.get_template("html.tpl")
 
 
 def download_file(url):
@@ -308,7 +324,6 @@ def create_header_footer(sheet, year=2020, length=10):
     sheet.set_landscape()
     sheet.set_paper(6)
     sheet.fit_to_pages(1, 1)
-    sheet.set_print_scale(60)
     sheet.merge_range('A2:D2', 'a')
     sheet.merge_range('F2:G2', 'b')
     sheet.merge_range('F3:G3', '')
@@ -339,7 +354,7 @@ def create_top_table(df, writer, sheet):
         'border': 1,
         'font': 'David',
         'font_size': 12})
-    top_df.to_excel(writer, index=False, startrow=2, sheet_name="Sheet1", header=False)
+    top_df.style.set_properties(**{'font-family': 'David', 'border-width': '1pt'}).to_excel(writer, index=False, startrow=2, sheet_name="Sheet1", header=False)
     relevant_columns = [0, 4, 5]
     _add_borders_to_intermediate_cells(sheet, header_format)
     for col_num in relevant_columns:
@@ -355,6 +370,11 @@ def _add_borders_to_intermediate_cells(sheet, header_format):
     sheet.write(1, 3, None, header_format)
     sheet.write(1, 2, None, header_format)
     sheet.write(1, 1, None, header_format)
+    sheet.write(2, 6, None, header_format)
+    sheet.write(3, 6, None, header_format)
+    sheet.write(4, 6, None, header_format)
+    sheet.write(5, 6, None, header_format)
+    sheet.write(6, 6, None, header_format)
 
 
 def create_main_table(df, writer, sheet):
@@ -362,7 +382,7 @@ def create_main_table(df, writer, sheet):
     df = df.copy()
     df.index = range(1, len(df) + 1)
     df.index.names = ["עסקה"]
-    df.to_excel(writer, index=True, startrow=13, startcol=0, header=False, sheet_name="Sheet1")
+    df.style.set_properties(**{'font-family': 'David', 'border-width': '1pt'}).to_excel(writer, index=True, startrow=13, startcol=0, header=False, sheet_name="Sheet1")
     header_format = writer.book.add_format({
     'bold': True,
     'text_wrap': True,
@@ -373,3 +393,4 @@ def create_main_table(df, writer, sheet):
     sheet.write(12, 0, df.index.names[0], header_format)
     for col_num, value in enumerate(df.columns.values):
         sheet.write(12, col_num + 1, value, header_format)
+
