@@ -8,7 +8,6 @@ import numpy as np
 #before compiling to a file - remember adding these lines to the spec file - after first attemp :
 import sys
 sys.setrecursionlimit(5000)
-
 #known columns for csv loaded to project:
 BitcoinTaxFile_title_identifiers = ['Volume','Symbol','Date Acquired', 'Date Sold', 'Proceeds']
 BloxTaxFile_title_identifiers =['רווח\הפסד שקלים (נומינלי)', 'רווח\הפסד שקלים (ריאלי)']

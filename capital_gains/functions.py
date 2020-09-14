@@ -514,6 +514,11 @@ def create_header_footer(sheet, year=2020, length=10):
 
 def create_top_table(df, writer, sheet):
     """Creates the smaller table above the main one"""
+    sheet.merge_range(2, 0, 2, 3, "")
+    sheet.merge_range(3, 0, 3, 3, "")
+    sheet.merge_range(4, 0, 4, 3, "")
+    sheet.merge_range(5, 0, 5, 3, "")
+    sheet.merge_range(6, 0, 6, 3, "")
     top_df_index = [
         'תמורה כוללת בש"ח/שווי עסקאות ברטר',
         "עלות מחיר מקור",
@@ -549,21 +554,21 @@ def create_top_table(df, writer, sheet):
             "font_size": 12,
         }
     )
-    top_df.style.set_properties(
-        **{"font-family": "David", "border-width": "1pt"}
+    top_df_style = {
+        "font-family": "David",
+        "border-width": "1pt",
+        "text-align": "center",
+    }
+    top_df.style.set_properties(**top_df_style).set_properties(
+        subset=["סכום"],
+        **{
+            "number-format": r"₪ #,##0.00;₪ -#,##0.00",
+        },
     ).to_excel(writer, index=False, startrow=2, sheet_name="Sheet1", header=False)
     relevant_columns = [0, 4, 5]
     _add_borders_to_intermediate_cells(sheet, header_format)
     for col_num in relevant_columns:
         sheet.write(1, col_num, top_df.columns[col_num], header_format)
-    form1 = writer.book.add_format(
-        {"num_format": "_ * #,##0.0_ ;_ * -#,##0.0_ ;_ * " "-" "??_ ;_ @_ "}
-    )
-    sheet.set_column(9, 15, 15, form1)
-    form2 = writer.book.add_format(
-        {"num_format": "_ * #,##0_ ;_ * -#,##0_ ;_ * " "-" "??_ ;_ @_ "}
-    )
-    sheet.set_column(7, 8, 15, form2)
 
 
 def _add_borders_to_intermediate_cells(sheet, header_format):
@@ -583,7 +588,42 @@ def create_main_table(df, writer, sheet):
     df = df.copy()
     df.index = range(1, len(df) + 1)
     df.index.names = ["עסקה"]
-    df.style.set_properties(**{"font-family": "David", "border-width": "1pt"}).to_excel(
+    df.style.set_properties(
+        subset=[
+            "מדד רכישה (לפי בסיס 51)",
+            "מדד מכירה (לפי בסיס 51)",
+            'תמורה בש"ח-שווי עסקת ברטר',
+            'תמורה בש"ח-שווי עסקת ברטר',
+            "עלות מקורית נומינאלית",
+            "סכום אינפלציוני",
+            "עלות מקורית מתואמת",
+            "רווח/הפסד נומינאלי",
+            "רווח-הפסד ריאלי",
+            "רווח-הפסד לצורכי מס",
+        ],
+        **{
+            "font-family": "David",
+            "border-width": "1pt",
+            "number-format": r"₪ #,##0.00;₪ -#,##0.00",
+            "vertical-align": "center",
+            "max-width": "800px",
+        },
+    ).set_properties(
+        subset=[
+            "מטבע",
+            "כמות",
+            "תאריך רכישה",
+            "תאריך מכירה",
+            "מחיר קניה",
+            "מחיר מכירה",
+        ],
+        **{
+            "font-family": "David",
+            "border-width": "1pt",
+            "width": "100px",
+            "vertical-align": "center",
+        },
+    ).to_excel(
         writer, index=True, startrow=13, startcol=0, header=False, sheet_name="Sheet1"
     )
     header_format = writer.book.add_format(
@@ -599,3 +639,16 @@ def create_main_table(df, writer, sheet):
     sheet.write(12, 0, df.index.names[0], header_format)
     for col_num, value in enumerate(df.columns.values):
         sheet.write(12, col_num + 1, value, header_format)
+    index_format = writer.book.add_format(
+        {
+            "align": "center",
+            "text_wrap": True,
+            "valign": "top",
+            "border": 1,
+            "font": "David",
+            "font_size": 12,
+        }
+    )
+    for row_num in range(len(df)):
+        sheet.write(13 + row_num, 0, row_num + 1, index_format)
+    sheet.set_column(7, 15, 15)
