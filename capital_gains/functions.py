@@ -223,8 +223,11 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
         "SoldAccount",
     ]
     test_file.columns = new_columns[: len(file.columns)]
+    test_file['Date Acquired'] = test_file["Date Acquired"].astype('datetime64[ns]')
+    test_file['Date Sold'] = test_file["Date Sold"].astype('datetime64[ns]')
 
     # add Purchased YearMonth value to the list
+    
     test_file["YearMonth"] = test_file["Date Acquired"].map(
         lambda x: 100 * x.year + x.month
     )
@@ -616,6 +619,8 @@ def create_main_table(df, writer, sheet):
             "תאריך מכירה",
             "מחיר קניה",
             "מחיר מכירה",
+            "בורסת קניה",
+            "בורסת מכירה",
         ],
         **{
             "font-family": "David",
