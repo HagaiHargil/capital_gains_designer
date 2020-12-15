@@ -335,7 +335,7 @@ def Inflation_Adjusted_Cost_Basis(file: pd.DataFrame):
         {cur: heb for cur, heb in zip(results2.columns, hebrew_cols)}, axis=1
     )
 
-    return results2
+    return results2, year
 
 
 def add_info_columns(df):

@@ -29,6 +29,7 @@ except:
     file = pd.read_csv(path,index_col=False)
     titles = list(file.head(0))
 del file
+
 #send to the relevant handling
 isbloxtax =  all(elem in titles for elem in BloxTaxFile_title_identifiers)
 isbitcointax = all(elem in titles for elem in BitcoinTaxFile_title_identifiers)
@@ -57,6 +58,7 @@ else:
     df2 = df1
 #adjust for inflation:
 df3 = Inflation_Adjusted_Cost_Basis(df2) #all capital gains are presented in a singel excel sheet and adjusted to inflation.
+
 df3.index.names = ['עסקה']
 #save to regular excel file
 where_to_save = path[:-4] + "_edited.xlsx"
