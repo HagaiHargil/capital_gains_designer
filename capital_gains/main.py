@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 import pandas as pd
-from functions import OpenFile,prepare_capital_gains_file_for_print,Inflation_Adjusted_Cost_Basis,Convert_to_ILS_Figures,divide_to_different_coins,set_bloxtaxfile,add_info_columns
+from functions import OpenFile,prepare_capital_gains_file_for_print,Inflation_Adjusted_Cost_Basis,Convert_to_ILS_Figures,divide_to_different_coins,set_bloxtaxfile,add_info_columns,create_header_footer, create_top_table, create_main_table
 import os
 import win32com.client
 import numpy as np
@@ -8,7 +8,6 @@ import numpy as np
 #before compiling to a file - remember adding these lines to the spec file - after first attemp :
 import sys
 sys.setrecursionlimit(5000)
-
 #known columns for csv loaded to project:
 BitcoinTaxFile_title_identifiers = ['Volume','Symbol','Date Acquired', 'Date Sold', 'Proceeds']
 BloxTaxFile_title_identifiers =['רווח\הפסד שקלים (נומינלי)', 'רווח\הפסד שקלים (ריאלי)']
@@ -37,13 +36,15 @@ isbitcointax = all(elem in titles for elem in BitcoinTaxFile_title_identifiers)
 
 capital_gains = pd.DataFrame
 if isbitcointax:
-    capital_gains = pd.read_csv(path, index_col=None, usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+    capital_gains = pd.read_csv(path, index_col=None)
 elif isbloxtax:
     capital_gains = set_bloxtaxfile(path)
 else:
     print('Sorry, your file didnt match any known file we can use')
     exit()
 #groupby the page and add info?
+relevant_columns = capital_gains.columns.str.find("Unnamed").to_numpy().nonzero()[0]
+capital_gains = capital_gains.iloc[:, relevant_columns]
 df1 = prepare_capital_gains_file_for_print(capital_gains)
 
 #if necessary, convert USD to ILS
@@ -56,48 +57,18 @@ else:
     print('Original was an ILS file')
     df2 = df1
 #adjust for inflation:
-df3, year = Inflation_Adjusted_Cost_Basis(df2) #all capital gains are presented in a singel excel sheet and adjusted to inflation.
-#save to regular excel file
-where_to_save = path[:-4] + " edited.xlsx"
-writer = pd.ExcelWriter(where_to_save, engine='xlsxwriter')
+df3 = Inflation_Adjusted_Cost_Basis(df2) #all capital gains are presented in a singel excel sheet and adjusted to inflation.
+
 df3.index.names = ['עסקה']
-df3.to_excel(writer, index=True, encoding='UTF-8')
-#Save macro on a macro enabled excel file (xlsm)
-where_to_save_the_macro = where_to_save[:-1] + str('m')
+#save to regular excel file
+where_to_save = path[:-4] + "_edited.xlsx"
+writer = pd.ExcelWriter(where_to_save, engine='xlsxwriter', mode='w')
 workbook = writer.book
-workbook.filename = where_to_save_the_macro
-workbook.add_vba_project('vbaProject.bin')
+sheet = workbook.add_worksheet()
 sheet = workbook.get_worksheet_by_name("Sheet1")
-sheet.write_column(0, 12, list(range(len(df3))))
+writer.sheets["Sheet1"] = sheet
+create_header_footer(sheet, year=df3.loc[0, "תאריך מכירה"].year, length=len(df3) + 13)
+create_top_table(df3, writer, sheet)
+create_main_table(df3, writer, sheet)
 writer.save()
-#Activate the macro on the xlsm file and save
-
-if os.path.exists(where_to_save_the_macro):
-    xl = win32com.client.Dispatch('Excel.Application')
-    xl.Workbooks.Open(Filename = where_to_save_the_macro, ReadOnly=0)
-    xl.Application.Run("Macro1")
-    xl.Application.Quit()
-    del xl
-
-
-s = workbook.get_worksheet_by_name('Sheet1')
-s.write_column('A13', list(range(len(df3))))
-writer.save()
-#close Macro file
 writer.close()
-#remove regular excel file
-workbook.close()
-try:
-   os.remove(where_to_save)
-except:
-    pass
-
-# Add numbers to first column in generated file
-# table = pd.read_excel(where_to_save_the_macro)
-# numbers_col = table["Unnamed: 0"]
-# correct_numbering = np.arange(500)
-# first_num = np.argwhere((numbers_col == 1).to_numpy())[0][0]
-# needed = len(numbers_col) - first_num
-# numbers_col.iloc[first_num:] = correct_numbering[:needed]
-
-

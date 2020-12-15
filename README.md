@@ -29,3 +29,14 @@ Available to give any assistance.
 Software was updated so that it will contain updated currency rates and that it would be possible to make an executable out of it. 
 The .exe can be generated using the auto-py-to-exe app, and the suitable config file is a .json file in this folder.
 
+## June 2020 update
+
+I had to modify the source code of pandas to make the templating thing work. The modification is done in `C:\Users\Ronit\AppData\Local\pypoetry\Cache\virtualenvs\capital-gains-designer-OfdUtgwm-py3.8\Lib\site-packages\pandas\io\formats\style.py` and it replaces `loader = ...` with: 
+```
+    if getattr(sys, 'frozen', False):
+        # we are running in a bundle
+        bundle_dir = sys._MEIPASS
+        loader = jinja2.FileSystemLoader(bundle_dir)
+    else:
+        loader = jinja2.PackageLoader("pandas", "io/formats/templates")
+```
