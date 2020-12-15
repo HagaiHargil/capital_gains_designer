@@ -592,7 +592,7 @@ def create_main_table(df, writer, sheet):
     df.index = range(1, len(df) + 1)
     df.index.names = ["עסקה"]
     df.style.set_properties(
-        subset=[
+        subset=df.columns.intersection([
             "מדד רכישה (לפי בסיס 51)",
             "מדד מכירה (לפי בסיס 51)",
             'תמורה בש"ח-שווי עסקת ברטר',
@@ -603,7 +603,7 @@ def create_main_table(df, writer, sheet):
             "רווח/הפסד נומינאלי",
             "רווח-הפסד ריאלי",
             "רווח-הפסד לצורכי מס",
-        ],
+        ]),
         **{
             "font-family": "David",
             "border-width": "1pt",
